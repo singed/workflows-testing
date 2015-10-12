@@ -5,7 +5,8 @@ browserify = require('gulp-browserify'),
 compass = require('gulp-compass'),
 connect = require('gulp-connect'),
 concat = require('gulp-concat'),
-gulpif = require('gulp-if')
+gulpif = require('gulp-if'),
+minifyHTML = require('gulp-minify-html'),
 uglify = require('gulp-uglify');
 
 var env,
@@ -37,7 +38,7 @@ jsSources = [
 	'components/scripts/template.js'
 ];
 sassSources = ['components/sass/style.scss'];
-htmlSources = [outputDir+'/*.html'];
+htmlSources = [outputDir+'*.html'];
 
 gulp.task('coffee', function() {
 	gulp.src(coffeeSources)
@@ -70,7 +71,7 @@ gulp.task('compass', function(){
 gulp.task('watch', function(){
 	gulp.watch(coffeeSources, ['coffee']);
 	gulp.watch(jsSources, ['js']);
-	gulp.watch(htmlSources, ['html']);
+	gulp.watch('builds/development/*.html', ['html']);
 	gulp.watch('components/sass/*.scss', ['compass']);
 });
 
@@ -83,9 +84,11 @@ gulp.task('connect', function(){
 });
 
 gulp.task('html', function(){
-	gulp.src(htmlSources)
+	gulp.src('builds/development/*.html')
+	.pipe(gulpif(env === 'production', minifyHTML()))
+	.pipe(gulpif(env === 'production', gulp.dest(outputDir)))
 	.pipe(connect.reload())
 
 });
 
-gulp.task('default', ['coffee', 'js', 'compass', 'connect', 'watch']);
+gulp.task('default', ['html', 'coffee', 'js', 'compass', 'connect', 'watch']);
